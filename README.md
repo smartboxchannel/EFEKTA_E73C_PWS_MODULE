@@ -54,7 +54,7 @@ Micro Button Tact Switch SMD 4Pin 3X4X2.5MM White (U2, U3) - https://ali.ski/Oqp
 
 100UF 107C D-type SMD Tantalum Capacitor (C3) - https://ali.ski/Btghu
 
-CR2477 Battery Socket Holder Case (TBH-CR2450-03) - https://ali.ski/nrYepk
+CR2477 Battery Socket Holder Case (U5) - https://ali.ski/nrYepk
 
 1x40 Single Row Male 2.54 Breakable Pin - https://ali.ski/4Hj6t5
 
