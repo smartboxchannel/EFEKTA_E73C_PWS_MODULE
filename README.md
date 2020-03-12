@@ -20,6 +20,8 @@ Contact: hello@efektalab.com
 
 Video: 
 
+![Wireless Module for Capacitive Soil Moisture Sensor on nRF52840](https://github.com/smartboxchannel/EFEKTA_E73C_PWS_MODULE/tree/master/IMAGES/IMG_20200312_111739.jpg)
+
 ---
 
 Components (see also BOM.CSV):
