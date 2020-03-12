@@ -1,4 +1,4 @@
-## Wireless Module for Capacitive Soil Moisture Sensor v2.0.
+## Wireless Module (nRF52840) for Capacitive Soil Moisture Sensor v2.0.
 
 Capasitive Soil Moisture Sensor (with the stabilizer!) - https://ali.ski/YjdTQ
 
