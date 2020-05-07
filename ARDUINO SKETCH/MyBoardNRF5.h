@@ -1,43 +1,12 @@
-/*
-  If you don't use an nRF5 board, you can ignore this file.
-
-  This file was part of the "My Sensors nRF5 Boards" board repository
-  available at https://github.com/mysensors/ArduinoBoards If you have
-  questions, please refer the documentation at
-  https://github.com/mysensors/ArduinoHwNRF5 first.
-
-  This file is compatible with ArduinoHwNRF5 >= 0.2.0
-
-  This file allows you to change the pins of internal hardware, like the
-  serial port, SPI bus or Wire bus.
-
-  All pins referenced here are mapped via the "g_ADigitalPinMap" Array
-  defined in "MyBoardNRF5.cpp" to pins of the MCU.
-  
-  As an example, if you have at the third position in "g_ADigitalPinMap" the
-  12, then all ports referenced in Arduino with 2 are mapped to P0.12. If you
-  don't change the "g_ADigitalPinMap" Array, the Arduino pins 0..31 are
-  translated to P0.00..P0..31.
-   
-  ###########################################################################
- 
-  This file is compatible with ArduinoHwNRF5 > 0.1.0
-  Copyright (c) 2014-2015 Arduino LLC.  All right reserved.
-  Copyright (c) 2016 Sandeep Mistry. All right reserved.
-  Copyright (c) 2017 Sensnology AB. All right reserved.
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  See the GNU Lesser General Public License for more details.
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+// ###############################################  Soil moisture sensor on nRF52840 ################################################### //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+// ##################################################################################################################################### //
 
 #ifndef _MYBOARDNRF5_H_
 #define _MYBOARDNRF5_H_

@@ -1,28 +1,23 @@
+// ###############################################  Soil moisture sensor on nRF52840 ################################################### //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+//                                                                                                                                       //
+// ##################################################################################################################################### //
+
 // SDK PORT
 extern "C" {
 #include "app_gpiote.h"
 #include "nrf_gpio.h"
 }
 #define APP_GPIOTE_MAX_USERS 1
-
 static app_gpiote_user_id_t m_gpiote_user_id;
 uint32_t PIN_BUTTON_MASK;
 volatile byte buttIntStatus = 0;
-byte err_delivery_beat;
-byte problem_mode_count;
-uint8_t sendTime;
-uint16_t m_s_m;
-uint16_t m_s_m2;
-uint16_t m_s_m_calc;
-uint16_t lastm_s_m;
-uint16_t lastm_s_m_calc;
-uint16_t m_s_mThreshold = 50;
-uint16_t m_s_m_calcThreshold = 1;
-uint8_t  countbatt = 0;
-int16_t myid;
-int16_t mypar;
-int16_t old_mypar = -1;
-int16_t master_id;
+
 bool check;
 bool configMode;
 bool nosleep = 0;
@@ -36,27 +31,59 @@ bool flag_sendRoute_parent;
 bool flag_no_present;
 bool flag_nogateway_mode;
 bool flag_find_parent_process;
-float celsius = 0.0;
-float lastcelsius;
-float celsiusThreshold = 1.0;
-uint32_t rawTemperature = 0;
-uint32_t rawTemperature2 = 0;
-uint16_t currentBatteryPercent;
-uint16_t batteryVoltage;
-int16_t linkQuality;
-int16_t old_linkQuality;
+
+byte err_delivery_beat;
+byte problem_mode_count;
+
 uint8_t batt_cap;
 uint8_t old_batt_cap = 100;
-uint32_t BATT_TIME = 21600000; //6 hours
+uint8_t sendTime;
+uint8_t  countbatt = 0;
+
+int16_t myid;
+int16_t mypar;
+int16_t old_mypar = -1;
+int16_t master_id;
+int16_t linkQuality;
+int16_t old_linkQuality;
+int16_t nRFRSSI;
+
+uint16_t m_s_m;
+uint16_t m_s_m2;
+uint16_t m_s_m_calc;
+uint16_t lastm_s_m;
+uint16_t lastm_s_m_calc = 1000;
+uint16_t m_s_mThreshold = 50;
+uint16_t m_s_m_calcThreshold = 1;
+uint16_t currentBatteryPercent;
+uint16_t batteryVoltageMSM;
+uint16_t batteryVoltage;
+uint16_t maxi = 3500;
+uint16_t nomV = 3300;
+uint16_t mini = 1300;
+uint16_t differenceV;
+uint16_t maxiM;
+uint16_t miniM;
+
+uint32_t rawTemperature = 0;
+uint32_t rawTemperature2 = 0;
+uint32_t BATT_TIME = 10800000; //6 hours
 uint32_t SLEEP_TIME_TEMP = 60000; //1 minute
 uint32_t SLEEP_TIME;
 uint32_t C_BATT_TIME;
-//uint32_t SLEEP_NOGW = 60000;
 uint32_t SLEEP_TIME_W;
 uint32_t previousMillis;
 uint32_t lightMillisR;
 uint32_t configMillis;
 
+float batteryVoltageF;
+float differenceAD;
+float celsius = 0.0;
+float lastcelsius;
+float celsiusThreshold = 1.0;
+
+
+//#define MY_TEST
 //#define MY_DEBUG
 #ifndef MY_DEBUG
 #define MY_DISABLED_SERIAL
@@ -66,19 +93,27 @@ int16_t mtwr;
 #define MY_TRANSPORT_WAIT_READY_MS (mtwr)
 #define MY_NRF5_ESB_PA_LEVEL (NRF5_PA_MAX)
 #define SN "PWS E73C"
-#define SV "1.0"
+#define SV "1.2"
 
 #include <MySensors.h>
 
 #define MSM_SENS_ID 1
 #define MSM_SENS_C_ID 2
 #define TEMP_INT_ID 3
+#define SIGNAL_Q_ID 100
 #define SEND_TIME_CHILD_ID 200
+#ifdef MY_TEST
+#define MSM_BATT_ID 250
+#endif
 
 MyMessage msg_msm(MSM_SENS_ID, V_LEVEL);
 MyMessage msg_msm2(MSM_SENS_C_ID, V_LEVEL);
 MyMessage msg_temp(TEMP_INT_ID, V_TEMP);
+MyMessage sqMsg(SIGNAL_Q_ID, V_VAR1);
 MyMessage conf_stMsg(SEND_TIME_CHILD_ID, V_VAR1);
+#ifdef MY_TEST
+MyMessage msg_msm_batt_v(MSM_BATT_ID, V_VAR1);
+#endif
 
 
 void before()
@@ -93,8 +128,9 @@ void presentation()
   check = sendSketchInfo(SN, SV);
   if (!check) {
     _transportSM.failedUplinkTransmissions = 0;
-    wait(15);
+    wait(30);
     check = sendSketchInfo(SN, SV);
+    wait(30);
     _transportSM.failedUplinkTransmissions = 0;
   }
 
@@ -108,23 +144,9 @@ void presentation()
   check = present(MSM_SENS_C_ID, S_CUSTOM, "% - SOIL MOISTURE");
   if (!check) {
     _transportSM.failedUplinkTransmissions = 0;
-    wait(30);
+    wait(60);
     check = present(MSM_SENS_C_ID, S_CUSTOM, "% - SOIL MOISTURE");
-    _transportSM.failedUplinkTransmissions = 0;
-  }
-
-  if (check) {
-    blinky(1, 1, BLUE_LED);
-  } else {
-    _transportSM.failedUplinkTransmissions = 0;
-    blinky(1, 1, RED_LED);
-  }
-
-  check = present(MSM_SENS_ID, S_CUSTOM, "DATA - SOIL MOISTURE");
-  if (!check) {
-    _transportSM.failedUplinkTransmissions = 0;
-    wait(45);
-    check = present(MSM_SENS_ID, S_CUSTOM, "DATA - SOIL MOISTURE");
+    wait(60);
     _transportSM.failedUplinkTransmissions = 0;
   }
 
@@ -138,8 +160,25 @@ void presentation()
   check = present(TEMP_INT_ID, S_TEMP, "TEMPERATURE");
   if (!check) {
     _transportSM.failedUplinkTransmissions = 0;
-    wait(60);
+    wait(90);
     check = present(TEMP_INT_ID, S_TEMP, "TEMPERATURE");
+    wait(90);
+    _transportSM.failedUplinkTransmissions = 0;
+  }
+
+  if (check) {
+    blinky(1, 1, BLUE_LED);
+  } else {
+    _transportSM.failedUplinkTransmissions = 0;
+    blinky(1, 1, RED_LED);
+  }
+
+  check = present(SIGNAL_Q_ID, S_CUSTOM, "SIGNAL %");
+  if (!check) {
+    _transportSM.failedUplinkTransmissions = 0;
+    wait(120);
+    check = present(SIGNAL_Q_ID, S_CUSTOM, "SIGNAL %");
+    wait(120);
     _transportSM.failedUplinkTransmissions = 0;
   }
 
@@ -153,8 +192,9 @@ void presentation()
   check = present(SEND_TIME_CHILD_ID, S_CUSTOM, "SET SEND TIME");
   if (!check) {
     _transportSM.failedUplinkTransmissions = 0;
-    wait(75);
+    wait(150);
     check = present(SEND_TIME_CHILD_ID, S_CUSTOM, "SET SEND TIME");
+    wait(150);
     _transportSM.failedUplinkTransmissions = 0;
   }
 
@@ -165,10 +205,44 @@ void presentation()
     blinky(1, 1, RED_LED);
   }
 
+#ifdef MY_TEST
+  check = present(MSM_SENS_ID, S_CUSTOM, "DATA - SOIL MOISTURE");
+  if (!check) {
+    _transportSM.failedUplinkTransmissions = 0;
+    wait(180);
+    check = present(MSM_SENS_ID, S_CUSTOM, "DATA - SOIL MOISTURE");
+    wait(180);
+    _transportSM.failedUplinkTransmissions = 0;
+  }
+
+  if (check) {
+    blinky(1, 1, BLUE_LED);
+  } else {
+    _transportSM.failedUplinkTransmissions = 0;
+    blinky(1, 1, RED_LED);
+  }
+
+  check = present(MSM_BATT_ID, S_CUSTOM, "SOIL MOISTURE VOLT");
+  if (!check) {
+    _transportSM.failedUplinkTransmissions = 0;
+    wait(210);
+    check = present(MSM_BATT_ID, S_CUSTOM, "SOIL MOISTURE VOLT");
+    wait(210);
+    _transportSM.failedUplinkTransmissions = 0;
+  }
+
+  if (check) {
+    blinky(1, 1, BLUE_LED);
+  } else {
+    _transportSM.failedUplinkTransmissions = 0;
+    blinky(1, 1, RED_LED);
+  }
+#endif
+
   check = send(conf_stMsg.set(sendTime));
   if (!check) {
     _transportSM.failedUplinkTransmissions = 0;
-    wait(90);
+    wait(150);
     send(conf_stMsg.set(sendTime));
     _transportSM.failedUplinkTransmissions = 0;
   }
@@ -299,9 +373,8 @@ void loop() {
         } else {
           countbatt++;
           if (countbatt == C_BATT_TIME) {
-            wait(50);
             batteryVoltage = hwCPUVoltage();
-            wait(5);
+            wait(1);
           }
           itemp();
           msm ();
@@ -398,12 +471,8 @@ void loop() {
   }
 
   if (nosleep == 0) {
-
     buttIntStatus = 0;
-
-    wait(10);
     sleep(SLEEP_TIME_W, false);
-    wait(50);
     nosleep = 1;
   }
 }
@@ -412,7 +481,6 @@ void loop() {
 void itemp() {
   for (byte i = 0; i < 10; i++) {
     NRF_TEMP->TASKS_START = 1;
-    wait(5);
     while (!(NRF_TEMP->EVENTS_DATARDY)) {}
     rawTemperature = NRF_TEMP->TEMP;
     rawTemperature2 = rawTemperature2 + rawTemperature;
@@ -421,6 +489,7 @@ void itemp() {
   celsius = ((((float)rawTemperature2) / 10) / 4.0);
   rawTemperature2 = 0;
   if (abs(celsius - lastcelsius) >= celsiusThreshold) {
+    lastcelsius = celsius;
     check = send(msg_temp.set(celsius, 1));
     if (!check) {
       _transportSM.failedUplinkTransmissions = 0;
@@ -458,39 +527,62 @@ void itemp() {
 
 void msm () {
   digitalWrite(PIN_POWER_PWS, LOW);
-  wait(20);
-  for (byte i = 0; i < 5; i++) {
+  wait(50);
+  for (byte i = 0; i < 10; i++) {
     m_s_m = analogRead(PIN_SENS_PWS);
     m_s_m2 = m_s_m2 + m_s_m;
-    wait(10);
+    wait(2);
   }
-  m_s_m = m_s_m2 / 5;
-  m_s_m2 = 0;
-  digitalWrite(PIN_POWER_PWS, HIGH);
-  wait(20);
-  //if (m_s_m > 3300) {
-  //  m_s_m = 3300;
-  //}
-  //if (m_s_m < 2000) {
-  // m_s_m = 2000;
-  // }
-  m_s_m_calc = map(m_s_m, 3300, 1300, 0, 100);
+  
+  * /
+  batteryVoltageMSM = hwCPUVoltage();
+  wait(5);
+#ifdef MY_TEST
+  batteryVoltageF = (float)batteryVoltage / 1000.00;
+#endif
 
+  m_s_m = m_s_m2 / 10;
+  m_s_m2 = 0;
+
+  digitalWrite(PIN_POWER_PWS, HIGH);
+  wait(10);
+
+  differenceV = nomV - batteryVoltageMSM;
+  differenceAD = (float)differenceV * 0.182926;
+  maxiM = maxi - (uint16_t )differenceAD;
+  miniM = mini - (uint16_t )differenceAD;
+
+#ifdef MY_TEST
+  wait(50);
+  send(msg_msm_batt_v.set(differenceAD, 3));
+  wait(500);
+  send(msg_msm_batt_v.set(maxiM));
+  wait(500);
+  send(msg_msm_batt_v.set(miniM));
+  wait(500);
+#endif
+
+  m_s_m_calc = map(m_s_m, maxiM, miniM, 0, 100);
+  if (m_s_m_calc > 100) {
+    m_s_m_calc = 100;
+  }
+  wait(50);
   if (abs(m_s_m_calc - lastm_s_m_calc) >= m_s_m_calcThreshold) {
     check = send(msg_msm2.set(m_s_m_calc));
     if (!check) {
       _transportSM.failedUplinkTransmissions = 0;
-      wait(20);
+      wait(50);
       check = send(msg_msm2.set(m_s_m_calc));
       if (!check) {
         _transportSM.failedUplinkTransmissions = 0;
-        wait(40);
+        wait(150);
         check = send(msg_msm2.set(m_s_m_calc));
       }
     }
     if (check) {
       blinky(1, 1, BLUE_LED);
       err_delivery_beat = 0;
+      lastm_s_m_calc = m_s_m_calc;
       if (flag_nogateway_mode == 1) {
         flag_nogateway_mode = 0;
         CORE_DEBUG(PSTR("MyS: NORMAL GATEWAY MODE\n"));
@@ -510,26 +602,43 @@ void msm () {
       }
     }
   }
-
-  if (abs(m_s_m - lastm_s_m) >= m_s_mThreshold) {
+#ifdef MY_TEST
+  check = send(msg_msm.set(m_s_m));
+  if (!check) {
+    _transportSM.failedUplinkTransmissions = 0;
+    wait(20);
     check = send(msg_msm.set(m_s_m));
     if (!check) {
       _transportSM.failedUplinkTransmissions = 0;
-      wait(20);
+      wait(40);
       check = send(msg_msm.set(m_s_m));
-      if (!check) {
-        _transportSM.failedUplinkTransmissions = 0;
-        wait(40);
-        check = send(msg_msm.set(m_s_m));
-      }
-    }
-    if (check) {
-      blinky(1, 1, BLUE_LED);
-    } else {
-      blinky(1, 1, RED_LED);
-      _transportSM.failedUplinkTransmissions = 0;
     }
   }
+  if (check) {
+    blinky(1, 1, BLUE_LED);
+  } else {
+    blinky(1, 1, RED_LED);
+    _transportSM.failedUplinkTransmissions = 0;
+  }
+
+  check = send(msg_msm_batt_v.set(batteryVoltageF, 3));
+  if (!check) {
+    _transportSM.failedUplinkTransmissions = 0;
+    wait(20);
+    check = send(msg_msm_batt_v.set(batteryVoltageF, 3));
+    if (!check) {
+      _transportSM.failedUplinkTransmissions = 0;
+      wait(40);
+      check = send(msg_msm_batt_v.set(batteryVoltageF, 3));
+    }
+  }
+  if (check) {
+    blinky(1, 1, BLUE_LED);
+  } else {
+    blinky(1, 1, RED_LED);
+    _transportSM.failedUplinkTransmissions = 0;
+  }
+#endif
 }
 
 void board_Init() {
@@ -543,10 +652,10 @@ void board_Init() {
   ledsOff();
 
   NRF_POWER->DCDCEN = 1;
-  wait(5);
+  wait(1);
 #ifndef MY_DEBUG
   NRF_UART0->ENABLE = 0;
-  wait(5);
+  wait(1);
 #endif
 
   NRF_NFCT->TASKS_DISABLE = 1;
@@ -732,32 +841,62 @@ void sendBatteryStatus(bool start) {
   batt_cap = battery_level_in_percent(batteryVoltage);
   if (start == 1) {
     //if (batt_cap < old_batt_cap) {
-    check = sendBatteryLevel(battery_level_in_percent(batteryVoltage));
+    check = sendBatteryLevel(batt_cap, 1);
+    wait(250);
     old_batt_cap = batt_cap;
     if (!check) {
       _transportSM.failedUplinkTransmissions = 0;
-      wait(20);
-      check = sendBatteryLevel(battery_level_in_percent(batteryVoltage));
+      wait(50);
+      check = sendBatteryLevel(batt_cap, 1);
+      wait(500);
       if (!check) {
         _transportSM.failedUplinkTransmissions = 0;
-        wait(40);
-        check = sendBatteryLevel(battery_level_in_percent(batteryVoltage));
+        wait(150);
+        check = sendBatteryLevel(batt_cap, 1);
+        wait(500);
       }
     }
     //}
   } else {
-    check = sendBatteryLevel(battery_level_in_percent(batteryVoltage));
+    check = sendBatteryLevel(batt_cap, 1);
+    wait(250);
     old_batt_cap = batt_cap;
     if (!check) {
       _transportSM.failedUplinkTransmissions = 0;
-      wait(20);
-      check = sendBatteryLevel(battery_level_in_percent(batteryVoltage));
+      wait(50);
+      check = sendBatteryLevel(batt_cap, 1);
+      wait(500);
       if (!check) {
         _transportSM.failedUplinkTransmissions = 0;
-        wait(40);
-        check = sendBatteryLevel(battery_level_in_percent(batteryVoltage));
+        wait(150);
+        check = sendBatteryLevel(batt_cap, 1);
+        wait(500);
       }
     }
+  }
+  lqSend();
+}
+
+
+void lqSend() {
+  nRFRSSI = transportGetReceivingRSSI();
+  nRFRSSI = map(nRFRSSI, -85, -40, 0, 100);
+  if (nRFRSSI < 0) {
+    nRFRSSI = 0;
+  }
+  if (nRFRSSI > 100) {
+    nRFRSSI = 100;
+  }
+  check = send(sqMsg.set(nRFRSSI));
+  if (!check) {
+    _transportSM.failedUplinkTransmissions = 0;
+    wait(100);
+    check = send(sqMsg.set(nRFRSSI));
+    wait(100);
+    _transportSM.failedUplinkTransmissions = 0;
+  } else {
+    CORE_DEBUG(PSTR("MyS: SEND LINK QUALITY\n"));
+    CORE_DEBUG(PSTR("MyS: LINK QUALITY %: %d\n"), nRFRSSI);
   }
 }
 
@@ -817,7 +956,7 @@ void happy_node_mode() {
 void gateway_fail() {
   flag_nogateway_mode = 1;
   flag_update_transport_param = 0;
-  //SLEEP_TIME_W = SLEEP_NOGW;
+  SLEEP_TIME_W = SLEEP_TIME_TEMP * 60;
   interrupt_Init();
 }
 
@@ -826,7 +965,7 @@ void check_parent() {
   _transportSM.findingParentNode = true;
   CORE_DEBUG(PSTR("MyS: SEND FIND PARENT REQUEST, WAIT RESPONSE\n"));
   _sendRoute(build(_msg, 255, NODE_SENSOR_ID, C_INTERNAL, 7).set(""));
-  wait(600, C_INTERNAL, 8);
+  wait(500, C_INTERNAL, 8);
   if (_msg.sensor == 255) {
     if (mGetCommand(_msg) == 3) {
       if (_msg.type == 8) {
@@ -848,11 +987,6 @@ void check_parent() {
     _transportSM.failedUplinkTransmissions = 0;
     CORE_DEBUG(PSTR("TRANSPORT: %d\n"), isTransportReady());
     nosleep = 0;
-    if (problem_mode_count < 3) {
-      CORE_DEBUG(PSTR("PROBLEM MODE COUNTER: %d\n"), problem_mode_count);
-      problem_mode_count++;
-      SLEEP_TIME_W = SLEEP_TIME_W + SLEEP_TIME_W;
-    }
   }
 }
 
