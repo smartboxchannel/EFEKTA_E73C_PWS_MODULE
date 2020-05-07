@@ -20,7 +20,7 @@ More info at http://efektalab.com/e73c_pws (still not working)
 
 Contact: hello@efektalab.com
 
-Telegram - https://t.me/diy_devices
+Telegram - https://tgclick.com/diy_devices
 
 Video: 
 
