@@ -2,15 +2,20 @@
 
 Capasitive Soil Moisture Sensor (with the stabilizer!) - https://ali.ski/7hi7A
 
-#### If this project was useful to you, you can buy me a Cup of coffee :)
+#### Donate me :)
 
 PayPal: altigraph@yandex.com
 
 Yandex Money: 4100140180242
 
-Also you can buy an assembled sensor - $12 - https://www.ebay.com/itm/202932278733
+WebMoney: Z722291985192, X133903637383, R494367503336
 
-case - $6 - https://www.ebay.com/itm/202932273449
+Bitcoin: bc1q3prwstl54j3a5j58esepfkyrqfjn0ydr8p3vc7
+
+Also you can buy an assembled sensor - $15 - https://www.ebay.com/itm/202932278733
+
+case - $5 - https://www.ebay.com/itm/202932273449
+
 
 Running on cr2477 battery (950mA).
 
