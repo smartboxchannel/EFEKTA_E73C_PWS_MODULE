@@ -2,9 +2,9 @@
 
 Capasitive Soil Moisture Sensor (with the stabilizer!) - https://ali.ski/7hi7A
 
-#### Donate me :)
+#### Donate me, ..I will make more and faster open devices :)
 
-PayPal: altigraph@yandex.com
+PayPal: altigraph@ya.ru
 
 Yandex Money: 4100140180242
 
