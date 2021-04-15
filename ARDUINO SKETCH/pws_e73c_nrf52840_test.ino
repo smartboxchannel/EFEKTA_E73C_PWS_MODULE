@@ -534,7 +534,6 @@ void msm () {
     wait(2);
   }
   
-  * /
   batteryVoltageMSM = hwCPUVoltage();
   wait(5);
 #ifdef MY_TEST
