@@ -1,9 +1,0 @@
-Exception: STATUS_ACCESS_VIOLATION at eip=6B80266B
-eax=21090002 ebx=2007E0F0 ecx=00000003 edx=6122AA70 esi=00000000 edi=0172B240
-ebp=00F2AFE8 esp=00F2AF90 program=C:\Users\Андрей\AppData\Local\Arduino15\packages\sandeepmistry\tools\openocd\0.10.0-dev.nrf5\bin\openocd.exe, pid 16316, thread main
-cs=0023 ds=002B es=002B fs=0053 gs=002B ss=002B
-Stack trace:
-Frame     Function  Args
-00F2AFE8  6B80266B (0172B240, 00000000, 00000000, 00000000)
-2007E11C  0045CE9F (00000000, 00000000, 00000000, 00000000)
-End of stack trace
