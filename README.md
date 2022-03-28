@@ -1,5 +1,7 @@
 ## Wireless Module (nRF52840) for Capacitive Soil Moisture Sensor v2.0.
 
+## You can make your own pcb here - https://www.pcbway.com/setinvite.aspx?inviteid=550959
+
 Capasitive Soil Moisture Sensor (with the stabilizer!) - https://ali.ski/7hi7A
 
 #### Don't donate to me, it doesn't work in this world: https://paypal.me/efektalab , just buy:
